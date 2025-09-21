@@ -1,0 +1,6 @@
+Flask
+Flask-Cors
+PyMuPDF
+scikit-learn
+numpy
+joblib
