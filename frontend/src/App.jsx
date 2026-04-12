@@ -7,13 +7,12 @@ import Status from './components/Status';
 import ConfirmationDialog from './components/ConfirmationDialog';
 import axios from 'axios';
 
-// API URL을 동적으로 설정 (같은 네트워크 접근 지원)
 const API_URL = `http://${window.location.hostname}:5001`;
 
 function App() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [statusKey, setStatusKey] = useState(0); // To trigger re-fetch
+  const [statusKey, setStatusKey] = useState(0);
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -38,28 +37,26 @@ function App() {
   };
 
   const handleUploadSuccess = useCallback(() => {
-    setStatusKey(prevKey => prevKey + 1); // Trigger status component re-fetch
+    setStatusKey(prevKey => prevKey + 1);
     setNotification({ open: true, message: '파일이 성공적으로 업로드 및 처리되었습니다.', severity: 'success' });
   }, []);
 
   const handleResetConfirm = async () => {
     setDialogOpen(false);
     try {
-        // GET 기반 우회 리셋 엔드포인트 호출
-        await axios.get(`${API_URL}/api/reset-all`);
-        setResults([]);
-        setStatusKey(prevKey => prevKey + 1);
-        setNotification({ open: true, message: '모든 데이터가 초기화되었습니다.', severity: 'success' });
+      // DELETE 메서드로 변경
+      await axios.delete(`${API_URL}/api/reset-all`);
+      setResults([]);
+      setStatusKey(prevKey => prevKey + 1);
+      setNotification({ open: true, message: '모든 데이터가 초기화되었습니다.', severity: 'success' });
     } catch (error) {
-        console.error('Reset failed:', error);
-        setNotification({ open: true, message: '초기화에 실패했습니다.', severity: 'error' });
+      console.error('Reset failed:', error);
+      setNotification({ open: true, message: '초기화에 실패했습니다.', severity: 'error' });
     }
   };
 
   const handleCloseNotification = (event, reason) => {
-    if (reason === 'clickaway') {
-      return;
-    }
+    if (reason === 'clickaway') return;
     setNotification({ ...notification, open: false });
   };
 

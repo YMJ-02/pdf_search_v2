@@ -4,7 +4,8 @@ import os
 import glob
 import re
 import shutil
-from nlp_processor import build_model, search_documents
+from werkzeug.utils import secure_filename
+from nlp_processor import build_model, search_documents, reload_model_cache
 from pdf_processor import process_pdf
 
 app = Flask(__name__)
@@ -28,12 +29,10 @@ CORS(app, resources={
 })
 
 # --- 초기화 ---
-# 서버 시작 시 폴더 생성
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(TEXT_DATA_FOLDER, exist_ok=True)
 os.makedirs(MODELS_FOLDER, exist_ok=True)
 
-# 서버 시작 시 초기 모델 빌드
 try:
     print("Attempting initial model build...")
     build_model(app.config['TEXT_DATA_FOLDER'], app.config['MODELS_FOLDER'])
@@ -49,50 +48,61 @@ def upload_file():
     file = request.files['file']
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
-    
+
     if file and file.filename.endswith('.pdf'):
-        filename = file.filename
+        # path traversal 방지: secure_filename 사용
+        filename = secure_filename(file.filename)
+        if not filename:
+            return jsonify({'error': 'Invalid filename'}), 400
+
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
 
         try:
-            # PDF 처리
+            # 같은 파일 재업로드 시 기존 텍스트 파일 정리
+            base_filename = os.path.splitext(filename)[0]
+            existing = glob.glob(os.path.join(app.config['TEXT_DATA_FOLDER'], f"{base_filename}_page_*.txt"))
+            for f in existing:
+                os.remove(f)
+
             process_pdf(filepath, app.config['TEXT_DATA_FOLDER'])
-            
-            # 모델 재빌드
+
             print("Rebuilding model after upload...")
             build_model(app.config['TEXT_DATA_FOLDER'], app.config['MODELS_FOLDER'])
             print("Model rebuilt successfully after upload.")
-            
+
             return jsonify({'message': f'File {filename} uploaded and processed successfully'}), 201
-        
+
         except Exception as e:
             print(f"Error during file processing or model rebuilding: {e}")
             return jsonify({'error': f'An error occurred: {e}'}), 500
     else:
         return jsonify({'error': 'Invalid file type, only PDF is allowed'}), 400
 
+
 @app.route('/api/search', methods=['GET'])
 def search():
     query = request.args.get('q')
     if not query:
         return jsonify({'error': 'Query parameter is required'}), 400
-    
+
     try:
         search_results = search_documents(query, app.config['MODELS_FOLDER'], app.config['TEXT_DATA_FOLDER'])
         return jsonify(search_results)
     except FileNotFoundError:
-         return jsonify({'error': 'Model not found. Please upload a file first.'}), 500
+        return jsonify({'error': 'Model not found. Please upload a file first.'}), 500
     except Exception as e:
         print(f"Search error: {e}")
         return jsonify({'error': str(e)}), 500
+
 
 @app.route('/api/status', methods=['GET'])
 def get_status():
     try:
         text_files = glob.glob(os.path.join(app.config['TEXT_DATA_FOLDER'], '*.txt'))
-        processed_files = sorted(list(set([re.sub(r'_page_\d+\.txt$', '', os.path.basename(f)) for f in text_files])))
-        
+        processed_files = sorted(list(set([
+            re.sub(r'_page_\d+\.txt$', '', os.path.basename(f)) for f in text_files
+        ])))
         return jsonify({
             'total_pages': len(text_files),
             'processed_files': processed_files
@@ -100,26 +110,24 @@ def get_status():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/reset-all', methods=['GET'])
+
+# reset-all: 부작용이 있는 요청이므로 DELETE 메서드 사용
+@app.route('/api/reset-all', methods=['DELETE'])
 def reset_all():
-    print("=== RESET-ALL (GET) REQUEST RECEIVED ===")
+    print("=== RESET-ALL (DELETE) REQUEST RECEIVED ===")
     try:
-        # text_data 폴더 내용 삭제
         for f in glob.glob(os.path.join(app.config['TEXT_DATA_FOLDER'], '*')):
             os.remove(f)
         print("Text data cleared")
 
-        # uploads 폴더 내용 삭제
         for f in glob.glob(os.path.join(app.config['UPLOAD_FOLDER'], '*')):
             os.remove(f)
         print("Upload folder cleared")
 
-        # models 폴더 내용 삭제
         for f in glob.glob(os.path.join(app.config['MODELS_FOLDER'], '*')):
             os.remove(f)
         print("Model folder cleared")
-        
-        # 초기 모델 상태로 되돌리기 (빈 모델)
+
         build_model(app.config['TEXT_DATA_FOLDER'], app.config['MODELS_FOLDER'])
 
         print("=== RESET-ALL COMPLETED SUCCESSFULLY ===")
@@ -128,9 +136,11 @@ def reset_all():
         print(f"=== RESET-ALL ERROR: {e} ===")
         return jsonify({'error': str(e)}), 500
 
+
 @app.route('/api/ping', methods=['GET'])
 def ping():
     return jsonify({"status": "ok"})
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001, host='0.0.0.0', use_reloader=False)
