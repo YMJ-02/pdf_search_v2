@@ -2,7 +2,7 @@
 
 # 🔍 PassageFinder
 
-**시험 문제의 출처 지문을 PDF에서 즉시 찾아주는 데스크톱 앱**
+**Instantly locate exam question sources in your PDF reading materials.**
 
 [![version](https://img.shields.io/badge/version-1.0.2-blue?style=flat-square)](https://github.com/YMJ-02/pdf_search_v2/releases)
 [![platform](https://img.shields.io/badge/platform-Windows-0078D4?style=flat-square&logo=windows&logoColor=white)](https://github.com/YMJ-02/pdf_search_v2/releases)
@@ -12,9 +12,186 @@
 
 ---
 
+After every midterm and final exam, teachers at English academies face the same question from students: *"Which passage did this come from?"*
+
+PassageFinder takes a keyword or sentence from an exam question and searches through the PDF reading materials used in class — returning the exact page and a preview of the matching passage in seconds.
+
+No Python. No Node.js. Just install and go.
+
+---
+
+## How It Works
+
+```
+Upload PDF materials
+  ↓
+  Per-page text extraction (PyMuPDF)
+  ↓
+  TF-IDF + N-gram + LSA model training
+  ↓
+  Enter exam question keyword
+  ↓
+  Cosine similarity scoring → ranked passage results
+```
+
+---
+
+## Installation
+
+> No Python, Node.js, or any other runtime required.
+
+1. Go to the [Releases](https://github.com/YMJ-02/pdf_search_v2/releases) page
+2. Download `PassageFinder Setup x.x.x.exe`
+3. Double-click the installer → Next → Next → Install
+4. Click the **PassageFinder** shortcut on your desktop
+
+> Each computer stores its own data independently under `%APPDATA%\pdf-search\`.
+
+---
+
+## Usage
+
+### 1. Upload PDFs
+
+1. Click **파일 선택** (Select File) on the left panel
+2. Choose one or more PDF files (multi-select supported)
+3. Click **업로드** (Upload) and wait for processing to complete
+
+### 2. Search for a Passage
+
+1. Type a keyword or sentence from the exam question into the search box
+2. Press Enter or click the search button
+3. Results are ranked by similarity — each result shows the filename, page number, and a passage preview
+
+### 3. Reset Data
+
+When switching to a new semester or new exam range:
+- Click **전체 초기화** (Reset All) to delete all uploaded PDFs and the trained model
+- Then upload the new PDFs
+
+---
+
+## Search Algorithm
+
+| Technique | Role |
+|-----------|------|
+| **TF-IDF** | Weighs important terms per page |
+| **N-gram** | Recognizes consecutive word patterns and phrases |
+| **LSA** (Latent Semantic Analysis) | Maps semantically similar concepts |
+| **Cosine Similarity** | Scores each page against the query |
+
+---
+
+## Project Structure
+
+```
+pdf_search_v2/
+├── backend/
+│   ├── app.py              # Flask API server
+│   ├── nlp_processor.py    # TF-IDF / LSA model
+│   ├── pdf_processor.py    # PDF text extraction
+│   ├── requirements.txt    # Python dependencies
+│   └── backend.spec        # PyInstaller build spec
+├── frontend/
+│   └── src/
+│       ├── App.jsx
+│       └── components/
+├── electron/
+│   ├── main.js             # Electron main process
+│   └── preload.js
+├── .github/workflows/
+│   └── build.yml           # GitHub Actions auto-build
+└── package.json
+```
+
+---
+
+## Building from Source
+
+### Requirements
+
+- Python 3.11+
+- Node.js 20+
+- Git
+
+### Run Locally
+
+```bash
+# 1. Clone
+git clone https://github.com/YMJ-02/pdf_search_v2.git
+cd pdf_search_v2
+
+# 2. Start backend
+cd backend
+pip install -r requirements.txt
+python app.py
+
+# 3. Start frontend (new terminal)
+cd frontend
+npm install
+npm run dev
+```
+
+### Build Installer
+
+```bash
+# Push a version tag → GitHub Actions builds and uploads the .exe to Releases automatically
+git tag v1.x.x
+git push origin v1.x.x
+```
+
+---
+
+## Version History
+
+| Version | Date | Notes |
+|---------|------|-------|
+| 1.0.2 | 2026-04-18 | Fix Korean filename encoding (force UTF-8) |
+| 1.0.1 | 2026-04-18 | Fix Korean UI text rendering, fix version label |
+| 1.0.0 | 2026-04-18 | Initial desktop app release (Electron + PyInstaller) |
+
+---
+
+## License
+
+MIT License. See [LICENSE](LICENSE) for details.
+
+---
+
+## Developer
+
+| | |
+|--|--|
+| GitHub | [@YMJ-02](https://github.com/YMJ-02) |
+| Other projects | [SlideScribe](https://github.com/YMJ-02/SlideScribe) — Turns lecture videos into structured notes |
+
+---
+
+## Bug Reports
+
+Open an issue at [https://github.com/YMJ-02/pdf_search_v2/issues](https://github.com/YMJ-02/pdf_search_v2/issues)
+
+Please include:
+- Windows version
+- What you were doing when the error occurred
+- Screenshot of the error message
+
+---
+---
+
+<div align="center">
+
+# 🔍 PassageFinder (한국어)
+
+**시험 문제의 출처 지문을 PDF에서 즉시 찾아주는 데스크톱 앱**
+
+</div>
+
+---
+
 중간·기말고사가 끝나면 항상 같은 질문이 온다. *"이 문제, 어디서 나온 거예요?"*
 
-PassageFinder는 시험 문제의 키워드를 입력하면, 수업 시간에 쓴 PDF 교재에서 해당 지문이 어느 페이지에 있는지 바로 찾아준다.
+PassageFinder는 시험 문제의 키워드나 문장을 입력하면, 수업에서 사용한 PDF 교재에서 해당 지문이 어느 페이지에 있는지 바로 찾아준다.
 
 Python도, Node.js도 설치할 필요 없다. `.exe` 파일 하나를 설치하면 끝.
 
@@ -38,15 +215,14 @@ PDF 교재 업로드
 
 ## 설치 방법
 
-> Python, Node.js 등 별도 설치 불필요. 설치 파일 하나로 바로 사용 가능.
+> Python, Node.js 등 별도 설치 불필요.
 
-1. 아래 **Releases** 페이지에서 `PassageFinder Setup x.x.x.exe` 다운로드
-   → [https://github.com/YMJ-02/pdf_search_v2/releases](https://github.com/YMJ-02/pdf_search_v2/releases)
+1. [Releases](https://github.com/YMJ-02/pdf_search_v2/releases) 페이지에서 `PassageFinder Setup x.x.x.exe` 다운로드
 2. 다운받은 `.exe` 더블클릭
 3. **다음 → 다음 → 설치 완료**
-4. 바탕화면의 **PassageFinder** 아이콘 클릭하면 바로 실행
+4. 바탕화면의 **PassageFinder** 아이콘 클릭
 
-> 각 컴퓨터마다 독립적으로 설치·사용 가능. 데이터는 각자 PC에 저장됨.
+> 각 컴퓨터마다 독립적으로 설치·사용 가능. 데이터는 `%APPDATA%\pdf-search\`에 저장됨.
 
 ---
 
@@ -60,7 +236,7 @@ PDF 교재 업로드
 
 ### 2. 지문 검색
 
-1. 오른쪽 검색창에 시험 문제의 핵심 키워드 또는 문장 입력
+1. 검색창에 시험 문제의 핀심 키워드 또는 문장 입력
 2. Enter 또는 검색 버튼 클릭
 3. 유사도 순으로 정렬된 결과 확인 — 파일명, 페이지 번호, 해당 지문 미리보기 제공
 
@@ -68,7 +244,7 @@ PDF 교재 업로드
 
 새 학기·새 시험 범위로 교체할 때:
 - **전체 초기화** 버튼 클릭 → 업로드된 PDF와 학습된 모델 전체 삭제
-- 이후 새 PDF를 다시 업로드하면 됨
+- 이후 새 PDF를 다시 업로드
 
 ---
 
@@ -95,14 +271,14 @@ pdf_search_v2/
 │   └── backend.spec        # PyInstaller 빌드 스펙
 ├── frontend/
 │   └── src/
-│       ├── App.jsx          # 메인 앱
-│       └── components/      # UI 컴포넌트
+│       ├── App.jsx
+│       └── components/
 ├── electron/
 │   ├── main.js             # Electron 메인 프로세스
-│   └── preload.js          # IPC 브릿지
+│   └── preload.js
 ├── .github/workflows/
 │   └── build.yml           # GitHub Actions 자동 빌드
-└── package.json            # Electron 빌드 설정
+└── package.json
 ```
 
 ---
@@ -118,16 +294,16 @@ pdf_search_v2/
 ### 로컬 실행
 
 ```bash
-# 1. 저장소 클론
+# 1. 클론
 git clone https://github.com/YMJ-02/pdf_search_v2.git
 cd pdf_search_v2
 
-# 2. Python 백엔드 의존성 설치
+# 2. 백엔드 실행
 cd backend
 pip install -r requirements.txt
 python app.py
 
-# 3. 새 터미널에서 프론트엔드 실행
+# 3. 프론트엔드 실행 (새 터미널)
 cd frontend
 npm install
 npm run dev
@@ -136,7 +312,7 @@ npm run dev
 ### 배포용 .exe 빌드
 
 ```bash
-# 태그 push → GitHub Actions가 자동으로 빌드 후 Releases에 업로드
+# 태그 push → GitHub Actions가 자동 빌드 후 Releases에 업로드
 git tag v1.x.x
 git push origin v1.x.x
 ```
@@ -150,6 +326,12 @@ git push origin v1.x.x
 | 1.0.2 | 2026-04-18 | 한글 파일명 인코딩 수정 (UTF-8 강제 적용) |
 | 1.0.1 | 2026-04-18 | 한글 UI 깨짐 수정, 버전명 수정 |
 | 1.0.0 | 2026-04-18 | 최초 데스크톱 앱 릴리즈 (Electron + PyInstaller) |
+
+---
+
+## 라이센스
+
+MIT License. 자세한 내용은 [LICENSE](LICENSE) 을 참고하세요.
 
 ---
 
@@ -168,5 +350,5 @@ git push origin v1.x.x
 
 제보 시 아래 정보를 포함해 주세요:
 - Windows 버전
-- 발생한 상황 (어떤 작업 중 오류가 났는지)
+- 발생한 상황
 - 오류 메시지 스크린샷
