@@ -1,9 +1,18 @@
+# -*- coding: utf-8 -*-
+import sys
+import os
+
+# Windows PyInstaller 환경에서 한글 파일명 처리를 위해 UTF-8 강제 설정
+if sys.platform == 'win32':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+    os.environ['PYTHONUTF8'] = '1'
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import os
 import glob
 import re
-import shutil
 from werkzeug.utils import secure_filename
 from nlp_processor import build_model, search_documents
 from pdf_processor import process_pdf
@@ -47,16 +56,25 @@ def upload_file():
         return jsonify({'error': 'No selected file'}), 400
 
     if file and file.filename.lower().endswith('.pdf'):
-        filename = secure_filename(file.filename)  # path traversal 방지
-        if not filename:
-            return jsonify({'error': 'Invalid filename'}), 400
+        # 한글 파일명 보존: secure_filename은 한글을 제거하므로
+        # 원본 파일명을 UTF-8로 디코딩하여 사용
+        original_filename = file.filename
+        try:
+            # werkzeug가 latin-1로 잘못 디코딩한 경우 복구
+            original_filename = original_filename.encode('latin-1').decode('utf-8')
+        except (UnicodeDecodeError, UnicodeEncodeError):
+            pass  # 이미 올바른 UTF-8이면 그대로 사용
 
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        # path traversal 방지: 디렉토리 구분자 제거
+        safe_filename = os.path.basename(original_filename).replace('/', '').replace('\\', '')
+        if not safe_filename:
+            safe_filename = secure_filename(file.filename) or 'upload.pdf'
+
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], safe_filename)
         file.save(filepath)
 
         try:
-            # 같은 파일 재업로드 시 기존 텍스트 파일 정리
-            base_filename = os.path.splitext(filename)[0]
+            base_filename = os.path.splitext(safe_filename)[0]
             existing = glob.glob(os.path.join(app.config['TEXT_DATA_FOLDER'], f"{base_filename}_page_*.txt"))
             for f in existing:
                 os.remove(f)
@@ -65,7 +83,7 @@ def upload_file():
             print("Rebuilding model after upload...")
             build_model(app.config['TEXT_DATA_FOLDER'], app.config['MODELS_FOLDER'])
             print("Model rebuilt successfully.")
-            return jsonify({'message': f'File {filename} uploaded and processed successfully'}), 201
+            return jsonify({'message': f'File {safe_filename} uploaded and processed successfully'}), 201
 
         except Exception as e:
             print(f"Error during file processing: {e}")
@@ -101,7 +119,6 @@ def get_status():
         return jsonify({'error': str(e)}), 500
 
 
-# GET + DELETE 둘 다 지원 (Electron에서는 GET, 기존 웹에서는 DELETE)
 @app.route('/api/reset-all', methods=['GET', 'DELETE'])
 def reset_all():
     print("=== RESET-ALL REQUEST RECEIVED ===")

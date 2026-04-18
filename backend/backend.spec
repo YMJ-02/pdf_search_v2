@@ -57,4 +57,6 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    # Windows에서 한글 파일명 처리를 위해 UTF-8 강제 설정
+    env={'PYTHONUTF8': '1', 'PYTHONIOENCODING': 'utf-8'},
 )
