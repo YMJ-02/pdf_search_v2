@@ -1,6 +1,6 @@
 {
   "name": "pdf-search",
-  "version": "2.0.0",
+  "version": "1.0.1",
   "description": "PDF 지문 검색 데스크톱 앱",
   "main": "electron/main.js",
   "scripts": {
