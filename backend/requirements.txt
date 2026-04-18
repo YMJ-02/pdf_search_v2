@@ -1,6 +1,8 @@
-Flask
-Flask-Cors
-PyMuPDF
+flask
+flask-cors
+pymupdf
 scikit-learn
 numpy
 joblib
+werkzeug
+konlpy

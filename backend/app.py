@@ -4,15 +4,14 @@ import os
 import glob
 import re
 import shutil
+from werkzeug.utils import secure_filename
 from nlp_processor import build_model, search_documents
 from pdf_processor import process_pdf
 
 app = Flask(__name__)
 
-# --- 데이터 경로: 환경변수 DATA_DIR 우선, 없으면 현재 디렉토리 ---
-# Electron 패키지마다 %APPDATA%/pdf-search/pdf_search_data/ 에 독립적으로 데이터 저장
-BASE_DIR = os.environ.get('DATA_DIR', os.path.dirname(os.path.abspath(__file__)))
-
+# DATA_DIR 환경변수로 각 컴퓨터마다 독립 데이터 폴더 사용 (Electron 앱용)
+BASE_DIR         = os.environ.get('DATA_DIR', os.path.dirname(os.path.abspath(__file__)))
 UPLOAD_FOLDER    = os.path.join(BASE_DIR, 'uploads')
 TEXT_DATA_FOLDER = os.path.join(BASE_DIR, 'text_data')
 MODELS_FOLDER    = os.path.join(BASE_DIR, 'models')
@@ -21,7 +20,6 @@ app.config['UPLOAD_FOLDER']    = UPLOAD_FOLDER
 app.config['TEXT_DATA_FOLDER'] = TEXT_DATA_FOLDER
 app.config['MODELS_FOLDER']    = MODELS_FOLDER
 
-# CORS: 로친 전용 (Electron renderer는 항상 127.0.0.1)
 CORS(app, resources={
     r"/api/*": {
         "origins": "*",
@@ -30,7 +28,6 @@ CORS(app, resources={
     }
 })
 
-# --- 초기화 ---
 for folder in [UPLOAD_FOLDER, TEXT_DATA_FOLDER, MODELS_FOLDER]:
     os.makedirs(folder, exist_ok=True)
 
@@ -40,7 +37,6 @@ try:
 except Exception as e:
     print(f"Initial model build skipped/failed: {e}")
 
-# --- 라우트 (API 엔드포인트) ---
 
 @app.route('/api/upload', methods=['POST'])
 def upload_file():
@@ -51,28 +47,38 @@ def upload_file():
         return jsonify({'error': 'No selected file'}), 400
 
     if file and file.filename.lower().endswith('.pdf'):
-        filename = file.filename
+        filename = secure_filename(file.filename)  # path traversal 방지
+        if not filename:
+            return jsonify({'error': 'Invalid filename'}), 400
+
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
 
         try:
+            # 같은 파일 재업로드 시 기존 텍스트 파일 정리
+            base_filename = os.path.splitext(filename)[0]
+            existing = glob.glob(os.path.join(app.config['TEXT_DATA_FOLDER'], f"{base_filename}_page_*.txt"))
+            for f in existing:
+                os.remove(f)
+
             process_pdf(filepath, app.config['TEXT_DATA_FOLDER'])
             print("Rebuilding model after upload...")
             build_model(app.config['TEXT_DATA_FOLDER'], app.config['MODELS_FOLDER'])
-            print("Model rebuilt successfully after upload.")
+            print("Model rebuilt successfully.")
             return jsonify({'message': f'File {filename} uploaded and processed successfully'}), 201
+
         except Exception as e:
             print(f"Error during file processing: {e}")
             return jsonify({'error': f'An error occurred: {e}'}), 500
     else:
         return jsonify({'error': 'Invalid file type, only PDF is allowed'}), 400
 
+
 @app.route('/api/search', methods=['GET'])
 def search():
     query = request.args.get('q')
     if not query:
         return jsonify({'error': 'Query parameter is required'}), 400
-
     try:
         search_results = search_documents(query, app.config['MODELS_FOLDER'], app.config['TEXT_DATA_FOLDER'])
         return jsonify(search_results)
@@ -82,6 +88,7 @@ def search():
         print(f"Search error: {e}")
         return jsonify({'error': str(e)}), 500
 
+
 @app.route('/api/status', methods=['GET'])
 def get_status():
     try:
@@ -89,14 +96,13 @@ def get_status():
         processed_files = sorted(list(set([
             re.sub(r'_page_\d+\.txt$', '', os.path.basename(f)) for f in text_files
         ])))
-        return jsonify({
-            'total_pages': len(text_files),
-            'processed_files': processed_files
-        })
+        return jsonify({'total_pages': len(text_files), 'processed_files': processed_files})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/reset-all', methods=['GET'])
+
+# GET + DELETE 둘 다 지원 (Electron에서는 GET, 기존 웹에서는 DELETE)
+@app.route('/api/reset-all', methods=['GET', 'DELETE'])
 def reset_all():
     print("=== RESET-ALL REQUEST RECEIVED ===")
     try:
@@ -110,10 +116,11 @@ def reset_all():
         print(f"=== RESET-ALL ERROR: {e} ===")
         return jsonify({'error': str(e)}), 500
 
+
 @app.route('/api/ping', methods=['GET'])
 def ping():
     return jsonify({"status": "ok"})
 
+
 if __name__ == '__main__':
-    # 로컈 전용 (127.0.0.1): 외부에서 접근 불가, Electron 내부에서만 통신
     app.run(debug=False, port=5001, host='127.0.0.1', use_reloader=False)
