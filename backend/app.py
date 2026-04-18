@@ -9,16 +9,19 @@ from pdf_processor import process_pdf
 
 app = Flask(__name__)
 
-# --- 설정 ---
-UPLOAD_FOLDER = 'uploads'
-TEXT_DATA_FOLDER = 'text_data'
-MODELS_FOLDER = 'models'
+# --- 데이터 경로: 환경변수 DATA_DIR 우선, 없으면 현재 디렉토리 ---
+# Electron 패키지마다 %APPDATA%/pdf-search/pdf_search_data/ 에 독립적으로 데이터 저장
+BASE_DIR = os.environ.get('DATA_DIR', os.path.dirname(os.path.abspath(__file__)))
 
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+UPLOAD_FOLDER    = os.path.join(BASE_DIR, 'uploads')
+TEXT_DATA_FOLDER = os.path.join(BASE_DIR, 'text_data')
+MODELS_FOLDER    = os.path.join(BASE_DIR, 'models')
+
+app.config['UPLOAD_FOLDER']    = UPLOAD_FOLDER
 app.config['TEXT_DATA_FOLDER'] = TEXT_DATA_FOLDER
-app.config['MODELS_FOLDER'] = MODELS_FOLDER
+app.config['MODELS_FOLDER']    = MODELS_FOLDER
 
-# CORS 설정: 모든 origin에서 접근 허용 (네트워크 공유용)
+# CORS: 로친 전용 (Electron renderer는 항상 127.0.0.1)
 CORS(app, resources={
     r"/api/*": {
         "origins": "*",
@@ -28,12 +31,9 @@ CORS(app, resources={
 })
 
 # --- 초기화 ---
-# 서버 시작 시 폴더 생성
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(TEXT_DATA_FOLDER, exist_ok=True)
-os.makedirs(MODELS_FOLDER, exist_ok=True)
+for folder in [UPLOAD_FOLDER, TEXT_DATA_FOLDER, MODELS_FOLDER]:
+    os.makedirs(folder, exist_ok=True)
 
-# 서버 시작 시 초기 모델 빌드
 try:
     print("Attempting initial model build...")
     build_model(app.config['TEXT_DATA_FOLDER'], app.config['MODELS_FOLDER'])
@@ -49,25 +49,20 @@ def upload_file():
     file = request.files['file']
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
-    
-    if file and file.filename.endswith('.pdf'):
+
+    if file and file.filename.lower().endswith('.pdf'):
         filename = file.filename
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
 
         try:
-            # PDF 처리
             process_pdf(filepath, app.config['TEXT_DATA_FOLDER'])
-            
-            # 모델 재빌드
             print("Rebuilding model after upload...")
             build_model(app.config['TEXT_DATA_FOLDER'], app.config['MODELS_FOLDER'])
             print("Model rebuilt successfully after upload.")
-            
             return jsonify({'message': f'File {filename} uploaded and processed successfully'}), 201
-        
         except Exception as e:
-            print(f"Error during file processing or model rebuilding: {e}")
+            print(f"Error during file processing: {e}")
             return jsonify({'error': f'An error occurred: {e}'}), 500
     else:
         return jsonify({'error': 'Invalid file type, only PDF is allowed'}), 400
@@ -77,12 +72,12 @@ def search():
     query = request.args.get('q')
     if not query:
         return jsonify({'error': 'Query parameter is required'}), 400
-    
+
     try:
         search_results = search_documents(query, app.config['MODELS_FOLDER'], app.config['TEXT_DATA_FOLDER'])
         return jsonify(search_results)
     except FileNotFoundError:
-         return jsonify({'error': 'Model not found. Please upload a file first.'}), 500
+        return jsonify({'error': 'Model not found. Please upload a file first.'}), 500
     except Exception as e:
         print(f"Search error: {e}")
         return jsonify({'error': str(e)}), 500
@@ -91,8 +86,9 @@ def search():
 def get_status():
     try:
         text_files = glob.glob(os.path.join(app.config['TEXT_DATA_FOLDER'], '*.txt'))
-        processed_files = sorted(list(set([re.sub(r'_page_\d+\.txt$', '', os.path.basename(f)) for f in text_files])))
-        
+        processed_files = sorted(list(set([
+            re.sub(r'_page_\d+\.txt$', '', os.path.basename(f)) for f in text_files
+        ])))
         return jsonify({
             'total_pages': len(text_files),
             'processed_files': processed_files
@@ -102,27 +98,13 @@ def get_status():
 
 @app.route('/api/reset-all', methods=['GET'])
 def reset_all():
-    print("=== RESET-ALL (GET) REQUEST RECEIVED ===")
+    print("=== RESET-ALL REQUEST RECEIVED ===")
     try:
-        # text_data 폴더 내용 삭제
-        for f in glob.glob(os.path.join(app.config['TEXT_DATA_FOLDER'], '*')):
-            os.remove(f)
-        print("Text data cleared")
-
-        # uploads 폴더 내용 삭제
-        for f in glob.glob(os.path.join(app.config['UPLOAD_FOLDER'], '*')):
-            os.remove(f)
-        print("Upload folder cleared")
-
-        # models 폴더 내용 삭제
-        for f in glob.glob(os.path.join(app.config['MODELS_FOLDER'], '*')):
-            os.remove(f)
-        print("Model folder cleared")
-        
-        # 초기 모델 상태로 되돌리기 (빈 모델)
+        for folder in [TEXT_DATA_FOLDER, UPLOAD_FOLDER, MODELS_FOLDER]:
+            for f in glob.glob(os.path.join(folder, '*')):
+                os.remove(f)
         build_model(app.config['TEXT_DATA_FOLDER'], app.config['MODELS_FOLDER'])
-
-        print("=== RESET-ALL COMPLETED SUCCESSFULLY ===")
+        print("=== RESET-ALL COMPLETED ===")
         return jsonify({'message': 'All data and models have been reset.'}), 200
     except Exception as e:
         print(f"=== RESET-ALL ERROR: {e} ===")
@@ -133,4 +115,5 @@ def ping():
     return jsonify({"status": "ok"})
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001, host='0.0.0.0', use_reloader=False)
+    # 로컈 전용 (127.0.0.1): 외부에서 접근 불가, Electron 내부에서만 통신
+    app.run(debug=False, port=5001, host='127.0.0.1', use_reloader=False)
