@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# Backend local data (각 컴퓨터마다 독립 데이터 - 저장소에 포함 안 함)
+backend/uploads/
+backend/text_data/
+backend/models/
+backend/dist/
+backend/build/
+
+# Node / Electron
+node_modules/
+frontend/node_modules/
+
+# Build outputs
+dist_app/
+frontend_dist/
+frontend/dist/
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
