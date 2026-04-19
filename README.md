@@ -146,6 +146,7 @@ git push origin v1.x.x
 
 | Version | Date | Notes |
 |---------|------|-------|
+| 1.0.6 | 2026-04-19 | Fix backend process not killed on app close; prevent duplicate backend on relaunch |
 | 1.0.5 | 2026-04-19 | Fix Flask stdout Errno 22 popup in packaged exe |
 | 1.0.4 | 2026-04-19 | Auto-inject tag version into build, rename to PassageFinder |
 | 1.0.3 | 2026-04-19 | IPC-based file upload to fix Korean filename encoding |
@@ -329,6 +330,7 @@ git push origin v1.x.x
 
 | 버전 | 날짜 | 내용 |
 |------|------|------|
+| 1.0.6 | 2026-04-19 | 앱 종료 시 백엔드 미종료 버그 수정, 중복 실행 방지 |
 | 1.0.5 | 2026-04-19 | 패키징된 exe에서 Flask stdout 팝업 오류 수정 |
 | 1.0.4 | 2026-04-19 | 태그 버전 자동 주입, PassageFinder로 이름 변경 |
 | 1.0.3 | 2026-04-19 | IPC 파일 업로드로 한글 파일명 인코딩 문제 해결 |
