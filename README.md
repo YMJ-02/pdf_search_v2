@@ -79,9 +79,9 @@ Upload PDF materials
 
 ### 1. Upload PDFs
 
-1. Click **파일 선택** (Select File) on the left panel
+1. Click **Select File** on the left panel
 2. Choose one or more PDF files (multi-select supported)
-3. Click **업로드** (Upload) and wait for processing to complete
+3. Click **Upload** and wait for processing to complete
 
 ### 2. Search for a Passage
 
@@ -92,7 +92,7 @@ Upload PDF materials
 ### 3. Reset Data
 
 When switching to a new semester or new exam range:
-- Click **전체 초기화** (Reset All) to delete all uploaded PDFs and the trained model
+- Click **Reset All** to delete all uploaded PDFs and the trained model
 - Then upload the new PDFs
 
 ---
