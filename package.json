@@ -1,6 +1,6 @@
 {
   "name": "pdf-search",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "PDF 지문 검색 데스크톱 앱",
   "main": "electron/main.js",
   "scripts": {
@@ -9,8 +9,8 @@
     "dist:win": "electron-builder --win"
   },
   "build": {
-    "appId": "com.ymj.pdfsearch",
-    "productName": "PDF 검색",
+    "appId": "com.ymj.passagefinder",
+    "productName": "PassageFinder",
     "directories": {
       "output": "dist_app"
     },
@@ -34,7 +34,7 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "shortcutName": "PDF 검색"
+      "shortcutName": "PassageFinder"
     }
   },
   "devDependencies": {

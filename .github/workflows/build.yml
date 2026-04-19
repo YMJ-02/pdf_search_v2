@@ -59,6 +59,20 @@ jobs:
       - name: Install root dependencies
         run: npm install
 
+      - name: Inject tag version into package.json
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          TAG=${{ github.ref_name }}
+          VERSION=${TAG#v}
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.version = '${VERSION}';
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+          echo "Version set to ${VERSION}"
+
       - name: Install frontend dependencies & build
         run: |
           cd frontend
@@ -94,14 +108,14 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: ./release/*.exe
-          name: "PDF 검색 ${{ github.ref_name }}"
+          name: "PassageFinder ${{ github.ref_name }}"
           body: |
-            ## PDF 검색 데스크톱 앱 ${{ github.ref_name }}
+            ## PassageFinder ${{ github.ref_name }}
 
             ### 설치 방법
-            1. 아래 `PDF 검색 Setup.exe` 다운로드
+            1. 아래 `PassageFinder Setup x.x.x.exe` 다운로드
             2. 더블클릭 → 다음 → 다음 → 설치 완료
-            3. 바탕화면의 **PDF 검색** 아이콘 클릭
+            3. 바탕화면의 **PassageFinder** 아이콘 클릭
 
             > Python, Node.js 설치 불필요. 그냥 설치해서 바로 사용 가능.
           draft: false
