@@ -3,10 +3,28 @@ import sys
 import os
 import shutil
 
+# PyInstaller exe 환경: stdout/stderr가 없거나 무효한 경우 NullWriter로 대체
+class _NullWriter:
+    def write(self, *a): pass
+    def flush(self): pass
+
+def _safe_stream(stream):
+    """스트림이 없거나 fileno()가 실패하면 NullWriter 반환"""
+    if stream is None:
+        return _NullWriter()
+    try:
+        stream.fileno()
+        if sys.platform == 'win32':
+            import io
+            return io.TextIOWrapper(stream.buffer, encoding='utf-8', errors='replace')
+        return stream
+    except Exception:
+        return _NullWriter()
+
+sys.stdout = _safe_stream(sys.stdout)
+sys.stderr = _safe_stream(sys.stderr)
+
 if sys.platform == 'win32':
-    import io
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
     os.environ['PYTHONUTF8'] = '1'
 
 from flask import Flask, request, jsonify
@@ -63,7 +81,6 @@ def upload_by_path():
     if not src_path.lower().endswith('.pdf'):
         return jsonify({'error': 'Only PDF files are allowed'}), 400
 
-    # 파일명을 경로에서 직접 추출 — 인코딩 변환 없이 그대로 사용
     filename = os.path.basename(src_path)
     dest_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
@@ -176,4 +193,8 @@ def ping():
 
 
 if __name__ == '__main__':
+    # Flask 배너 출력 억제 (PyInstaller exe에서 Errno 22 방지)
+    import logging
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.ERROR)
     app.run(debug=False, port=5001, host='127.0.0.1', use_reloader=False)
