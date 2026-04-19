@@ -20,6 +20,32 @@ No Python. No Node.js. Just install and go.
 
 ---
 
+## Why Not Just Ctrl+F?
+
+Ctrl+F only finds **exact character matches**. In English academy exams, question writers routinely paraphrase the original passage — changing words, restructuring sentences, or summarizing. Ctrl+F fails the moment a single word differs.
+
+| | Ctrl+F | PassageFinder |
+|---|---|---|
+| Exact word match | ✅ | ✅ |
+| Paraphrased sentences | ❌ | ✅ |
+| Synonyms / related words | ❌ | ✅ |
+| Partial keyword, incomplete quote | ❌ | ✅ |
+| Searches across multiple PDFs at once | ❌ | ✅ |
+| Ranked results by relevance | ❌ | ✅ |
+
+**How PassageFinder handles paraphrasing:**
+
+- **TF-IDF** weights words by how distinctive they are to each page — so rare, meaningful words carry more signal than common ones.
+- **N-gram** captures multi-word phrases, so *"global warming"* matches even if split or reordered slightly.
+- **LSA** (Latent Semantic Analysis) understands that *"automobile"* and *"car"* mean the same thing — finding semantically similar passages even when vocabulary differs.
+- **Cosine Similarity** scores every page against the query and ranks them, so the closest match always surfaces at the top.
+
+> **Example:** A question reads *"The researcher found that exposure to nature reduced stress levels."*
+> The original passage says *"Scientists discovered that spending time outdoors lowers cortisol."*
+> Ctrl+F finds nothing. PassageFinder ranks that page #1.
+
+---
+
 ## How It Works
 
 ```
@@ -201,6 +227,32 @@ Please include:
 PassageFinder는 시험 문제의 키워드나 문장을 입력하면, 수업에서 사용한 PDF 교재에서 해당 지문이 어느 페이지에 있는지 바로 찾아준다.
 
 Python도, Node.js도 설치할 필요 없다. `.exe` 파일 하나를 설치하면 끝.
+
+---
+
+## 그냥 Ctrl+F 쓰면 안 되나요?
+
+Ctrl+F는 **글자가 완전히 일치할 때만** 찾을 수 있습니다. 그런데 영어학원 시험 문제는 출제자가 원문을 그대로 쓰지 않는 경우가 많습니다. 단어를 바꾸거나, 문장을 재구성하거나, 요약해서 출제합니다. 단어 하나만 달라져도 Ctrl+F는 아무것도 찾지 못합니다.
+
+| | Ctrl+F | PassageFinder |
+|---|---|---|
+| 완전히 동일한 문장 검색 | ✅ | ✅ |
+| 변형·paraphrase된 문장 | ❌ | ✅ |
+| 유사어·관련 표현 | ❌ | ✅ |
+| 일부 키워드만 입력해도 검색 | ❌ | ✅ |
+| 여러 PDF를 한 번에 검색 | ❌ | ✅ |
+| 유사도 순 결과 정렬 | ❌ | ✅ |
+
+**변형 출제에 대응하는 방식:**
+
+- **TF-IDF** — 각 페이지에서 특징적인 단어에 높은 가중치를 부여합니다. 흔한 단어보다 중요한 단어가 더 큰 영향을 미칩니다.
+- **N-gram** — 연속된 단어 조합을 인식합니다. 구문이 일부 바뀌거나 순서가 달라져도 패턴을 잡아냅니다.
+- **LSA** (잠재 의미 분석) — *"automobile"*과 *"car"*가 같은 뜻임을 이해합니다. 단어가 달라도 의미가 유사하면 해당 지문을 찾아냅니다.
+- **Cosine Similarity** — 입력된 쿼리와 각 페이지의 유사도를 점수로 계산해 가장 관련성 높은 결과를 상위에 표시합니다.
+
+> **예시:** 시험 문제에 *"The researcher found that exposure to nature reduced stress levels."* 라고 나왔는데,
+> 원문에는 *"Scientists discovered that spending time outdoors lowers cortisol."* 라고 쓰여 있는 경우.
+> Ctrl+F는 아무것도 찾지 못하지만, PassageFinder는 해당 페이지를 1순위로 반환합니다.
 
 ---
 
