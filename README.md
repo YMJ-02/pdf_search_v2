@@ -4,9 +4,9 @@
 
 **Instantly locate exam question sources in your PDF reading materials.**
 
-[![version](https://img.shields.io/badge/version-1.0.2-blue?style=flat-square)](https://github.com/YMJ-02/pdf_search_v2/releases)
-[![platform](https://img.shields.io/badge/platform-Windows-0078D4?style=flat-square&logo=windows&logoColor=white)](https://github.com/YMJ-02/pdf_search_v2/releases)
-[![license](https://img.shields.io/github/license/YMJ-02/pdf_search_v2?style=flat-square&color=green)](https://github.com/YMJ-02/pdf_search_v2/blob/main/LICENSE)
+[![version](https://img.shields.io/github/v/release/YMJ-02/PassageFinder?style=flat-square&label=version&color=blue)](https://github.com/YMJ-02/PassageFinder/releases/latest)
+[![platform](https://img.shields.io/badge/platform-Windows-0078D4?style=flat-square&logo=windows&logoColor=white)](https://github.com/YMJ-02/PassageFinder/releases/latest)
+[![license](https://img.shields.io/github/license/YMJ-02/PassageFinder?style=flat-square&color=green)](https://github.com/YMJ-02/PassageFinder/blob/main/LICENSE)
 
 </div>
 
@@ -40,12 +40,12 @@ Upload PDF materials
 
 > No Python, Node.js, or any other runtime required.
 
-1. Go to the [Releases](https://github.com/YMJ-02/pdf_search_v2/releases) page
+1. Go to the [Releases](https://github.com/YMJ-02/PassageFinder/releases/latest) page
 2. Download `PassageFinder Setup x.x.x.exe`
 3. Double-click the installer → Next → Next → Install
 4. Click the **PassageFinder** shortcut on your desktop
 
-> Each computer stores its own data independently under `%APPDATA%\pdf-search\`.
+> Each computer stores its own data independently under `%APPDATA%\PassageFinder\`.
 
 ---
 
@@ -85,7 +85,7 @@ When switching to a new semester or new exam range:
 ## Project Structure
 
 ```
-pdf_search_v2/
+PassageFinder/
 ├── backend/
 │   ├── app.py              # Flask API server
 │   ├── nlp_processor.py    # TF-IDF / LSA model
@@ -118,8 +118,8 @@ pdf_search_v2/
 
 ```bash
 # 1. Clone
-git clone https://github.com/YMJ-02/pdf_search_v2.git
-cd pdf_search_v2
+git clone https://github.com/YMJ-02/PassageFinder.git
+cd PassageFinder
 
 # 2. Start backend
 cd backend
@@ -146,6 +146,9 @@ git push origin v1.x.x
 
 | Version | Date | Notes |
 |---------|------|-------|
+| 1.0.5 | 2026-04-19 | Fix Flask stdout Errno 22 popup in packaged exe |
+| 1.0.4 | 2026-04-19 | Auto-inject tag version into build, rename to PassageFinder |
+| 1.0.3 | 2026-04-19 | IPC-based file upload to fix Korean filename encoding |
 | 1.0.2 | 2026-04-18 | Fix Korean filename encoding (force UTF-8) |
 | 1.0.1 | 2026-04-18 | Fix Korean UI text rendering, fix version label |
 | 1.0.0 | 2026-04-18 | Initial desktop app release (Electron + PyInstaller) |
@@ -164,12 +167,13 @@ MIT License. See [LICENSE](LICENSE) for details.
 |--|--|
 | GitHub | [@YMJ-02](https://github.com/YMJ-02) |
 | Other projects | [SlideScribe](https://github.com/YMJ-02/SlideScribe) — Turns lecture videos into structured notes |
+| | [NodCast](https://github.com/YMJ-02/NodCast) — Deeptech & semiconductor news bot that posts to X twice a day |
 
 ---
 
 ## Bug Reports
 
-Open an issue at [https://github.com/YMJ-02/pdf_search_v2/issues](https://github.com/YMJ-02/pdf_search_v2/issues)
+Open an issue at [https://github.com/YMJ-02/PassageFinder/issues](https://github.com/YMJ-02/PassageFinder/issues)
 
 Please include:
 - Windows version
@@ -184,6 +188,8 @@ Please include:
 # 🔍 PassageFinder (한국어)
 
 **시험 문제의 출처 지문을 PDF에서 즉시 찾아주는 데스크톱 앱**
+
+[![version](https://img.shields.io/github/v/release/YMJ-02/PassageFinder?style=flat-square&label=버전&color=blue)](https://github.com/YMJ-02/PassageFinder/releases/latest)
 
 </div>
 
@@ -217,12 +223,12 @@ PDF 교재 업로드
 
 > Python, Node.js 등 별도 설치 불필요.
 
-1. [Releases](https://github.com/YMJ-02/pdf_search_v2/releases) 페이지에서 `PassageFinder Setup x.x.x.exe` 다운로드
+1. [Releases](https://github.com/YMJ-02/PassageFinder/releases/latest) 페이지에서 `PassageFinder Setup x.x.x.exe` 다운로드
 2. 다운받은 `.exe` 더블클릭
 3. **다음 → 다음 → 설치 완료**
 4. 바탕화면의 **PassageFinder** 아이콘 클릭
 
-> 각 컴퓨터마다 독립적으로 설치·사용 가능. 데이터는 `%APPDATA%\pdf-search\`에 저장됨.
+> 각 컴퓨터마다 독립적으로 설치·사용 가능. 데이터는 `%APPDATA%\PassageFinder\`에 저장됨.
 
 ---
 
@@ -236,7 +242,7 @@ PDF 교재 업로드
 
 ### 2. 지문 검색
 
-1. 검색창에 시험 문제의 핀심 키워드 또는 문장 입력
+1. 검색창에 시험 문제의 핵심 키워드 또는 문장 입력
 2. Enter 또는 검색 버튼 클릭
 3. 유사도 순으로 정렬된 결과 확인 — 파일명, 페이지 번호, 해당 지문 미리보기 제공
 
@@ -262,7 +268,7 @@ PDF 교재 업로드
 ## 프로젝트 구조
 
 ```
-pdf_search_v2/
+PassageFinder/
 ├── backend/
 │   ├── app.py              # Flask API 서버
 │   ├── nlp_processor.py    # TF-IDF / LSA 모델 처리
@@ -295,8 +301,8 @@ pdf_search_v2/
 
 ```bash
 # 1. 클론
-git clone https://github.com/YMJ-02/pdf_search_v2.git
-cd pdf_search_v2
+git clone https://github.com/YMJ-02/PassageFinder.git
+cd PassageFinder
 
 # 2. 백엔드 실행
 cd backend
@@ -323,6 +329,9 @@ git push origin v1.x.x
 
 | 버전 | 날짜 | 내용 |
 |------|------|------|
+| 1.0.5 | 2026-04-19 | 패키징된 exe에서 Flask stdout 팝업 오류 수정 |
+| 1.0.4 | 2026-04-19 | 태그 버전 자동 주입, PassageFinder로 이름 변경 |
+| 1.0.3 | 2026-04-19 | IPC 파일 업로드로 한글 파일명 인코딩 문제 해결 |
 | 1.0.2 | 2026-04-18 | 한글 파일명 인코딩 수정 (UTF-8 강제 적용) |
 | 1.0.1 | 2026-04-18 | 한글 UI 깨짐 수정, 버전명 수정 |
 | 1.0.0 | 2026-04-18 | 최초 데스크톱 앱 릴리즈 (Electron + PyInstaller) |
@@ -341,12 +350,13 @@ MIT License. 자세한 내용은 [LICENSE](LICENSE) 을 참고하세요.
 |--|--|
 | GitHub | [@YMJ-02](https://github.com/YMJ-02) |
 | 다른 프로젝트 | [SlideScribe](https://github.com/YMJ-02/SlideScribe) — 강의 영상을 구조화된 노트로 변환 |
+| | [NodCast](https://github.com/YMJ-02/NodCast) — 딥테크·반도체 뉴스를 AI가 요약해 X에 하루 두 번 자동 포스팅 |
 
 ---
 
 ## 버그 제보
 
-[Issues](https://github.com/YMJ-02/pdf_search_v2/issues) 탭에서 제보해 주세요.
+[Issues](https://github.com/YMJ-02/PassageFinder/issues) 탭에서 제보해 주세요.
 
 제보 시 아래 정보를 포함해 주세요:
 - Windows 버전
