@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import sys
 import os
+import shutil
 
-# Windows PyInstaller 환경에서 한글 파일명 처리를 위해 UTF-8 강제 설정
 if sys.platform == 'win32':
     import io
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
@@ -19,7 +19,6 @@ from pdf_processor import process_pdf
 
 app = Flask(__name__)
 
-# DATA_DIR 환경변수로 각 컴퓨터마다 독립 데이터 폴더 사용 (Electron 앱용)
 BASE_DIR         = os.environ.get('DATA_DIR', os.path.dirname(os.path.abspath(__file__)))
 UPLOAD_FOLDER    = os.path.join(BASE_DIR, 'uploads')
 TEXT_DATA_FOLDER = os.path.join(BASE_DIR, 'text_data')
@@ -47,8 +46,49 @@ except Exception as e:
     print(f"Initial model build skipped/failed: {e}")
 
 
+@app.route('/api/upload-path', methods=['POST'])
+def upload_by_path():
+    """
+    Electron 전용: 파일 경로를 JSON으로 받아 직접 복사 처리.
+    multipart 인코딩을 우회하므로 한글 파일명이 완벽하게 보존됨.
+    """
+    data = request.get_json()
+    if not data or 'file_path' not in data:
+        return jsonify({'error': 'file_path is required'}), 400
+
+    src_path = data['file_path']
+
+    if not os.path.isfile(src_path):
+        return jsonify({'error': f'File not found: {src_path}'}), 400
+    if not src_path.lower().endswith('.pdf'):
+        return jsonify({'error': 'Only PDF files are allowed'}), 400
+
+    # 파일명을 경로에서 직접 추출 — 인코딩 변환 없이 그대로 사용
+    filename = os.path.basename(src_path)
+    dest_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+    try:
+        shutil.copy2(src_path, dest_path)
+
+        base_filename = os.path.splitext(filename)[0]
+        existing = glob.glob(os.path.join(app.config['TEXT_DATA_FOLDER'], f"{base_filename}_page_*.txt"))
+        for f in existing:
+            os.remove(f)
+
+        process_pdf(dest_path, app.config['TEXT_DATA_FOLDER'])
+        print("Rebuilding model after upload...")
+        build_model(app.config['TEXT_DATA_FOLDER'], app.config['MODELS_FOLDER'])
+        print("Model rebuilt successfully.")
+        return jsonify({'message': f'File {filename} uploaded and processed successfully'}), 201
+
+    except Exception as e:
+        print(f"Error during file processing: {e}")
+        return jsonify({'error': f'An error occurred: {e}'}), 500
+
+
 @app.route('/api/upload', methods=['POST'])
 def upload_file():
+    """브라우저 fallback용 기존 multipart 엔드포인트"""
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'}), 400
     file = request.files['file']
@@ -56,16 +96,12 @@ def upload_file():
         return jsonify({'error': 'No selected file'}), 400
 
     if file and file.filename.lower().endswith('.pdf'):
-        # 한글 파일명 보존: secure_filename은 한글을 제거하므로
-        # 원본 파일명을 UTF-8로 디코딩하여 사용
         original_filename = file.filename
         try:
-            # werkzeug가 latin-1로 잘못 디코딩한 경우 복구
             original_filename = original_filename.encode('latin-1').decode('utf-8')
         except (UnicodeDecodeError, UnicodeEncodeError):
-            pass  # 이미 올바른 UTF-8이면 그대로 사용
+            pass
 
-        # path traversal 방지: 디렉토리 구분자 제거
         safe_filename = os.path.basename(original_filename).replace('/', '').replace('\\', '')
         if not safe_filename:
             safe_filename = secure_filename(file.filename) or 'upload.pdf'

@@ -27,17 +27,26 @@ function startBackend() {
   const backendExe = getBackendPath();
   let proc;
 
+  // UTF-8 강제 설정 환경변수
+  const backendEnv = {
+    ...process.env,
+    DATA_DIR: dataDir,
+    PYTHONUTF8: '1',
+    PYTHONIOENCODING: 'utf-8',
+    PYTHONLEGACYWINDOWSSTDIO: '0',
+  };
+
   if (backendExe && fs.existsSync(backendExe)) {
     proc = spawn(backendExe, [], {
       cwd: dataDir,
-      env: { ...process.env, DATA_DIR: dataDir },
+      env: backendEnv,
       detached: false,
     });
   } else {
     const backendScript = path.join(__dirname, '..', 'backend', 'app.py');
     proc = spawn('python', [backendScript], {
       cwd: path.join(__dirname, '..', 'backend'),
-      env: { ...process.env, DATA_DIR: dataDir },
+      env: backendEnv,
     });
   }
 
