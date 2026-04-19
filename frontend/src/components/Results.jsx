@@ -1,7 +1,10 @@
 import React from 'react';
 import { Box, Typography, List, ListItem, ListItemText, Paper, CircularProgress, Divider, Chip } from '@mui/material';
+import { useLang } from '../LangContext';
 
 function Results({ results, loading }) {
+  const { t } = useLang();
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" mt={4}>
@@ -10,13 +13,12 @@ function Results({ results, loading }) {
     );
   }
 
-  // Array.isArray로 results가 배열인지 먼저 확인
   if (!Array.isArray(results)) {
     return (
       <Box mt={4}>
-        <Typography variant="h5" gutterBottom>검색 결과</Typography>
+        <Typography variant="h5" gutterBottom>{t.resultsTitle}</Typography>
         <Paper elevation={2} sx={{ p: 2 }}>
-          <Typography>검색 결과를 불러오는 중 오류가 발생했습니다.</Typography>
+          <Typography>{t.resultsError}</Typography>
         </Paper>
       </Box>
     );
@@ -24,7 +26,7 @@ function Results({ results, loading }) {
 
   return (
     <Box mt={4}>
-      <Typography variant="h5" gutterBottom>검색 결과</Typography>
+      <Typography variant="h5" gutterBottom>{t.resultsTitle}</Typography>
       <Paper elevation={2} sx={{ maxHeight: '50vh', overflow: 'auto' }}>
         <List>
           {results.length > 0 ? (
@@ -32,22 +34,11 @@ function Results({ results, loading }) {
               <React.Fragment key={index}>
                 <ListItem>
                   <ListItemText
-                    primary={
-                      <Typography variant="h6">
-                        {result.page}
-                      </Typography>
-                    }
+                    primary={<Typography variant="h6">{result.page}</Typography>}
                     secondary={
                       <Box>
-                        <Chip 
-                          label={`유사도: ${result.similarity}`} 
-                          color="primary" 
-                          size="small" 
-                          sx={{ mb: 1 }}
-                        />
-                        <Typography variant="body2" color="text.secondary">
-                          {result.content_preview}
-                        </Typography>
+                        <Chip label={t.similarity(result.similarity)} color="primary" size="small" sx={{ mb: 1 }} />
+                        <Typography variant="body2" color="text.secondary">{result.content_preview}</Typography>
                       </Box>
                     }
                   />
@@ -57,7 +48,7 @@ function Results({ results, loading }) {
             ))
           ) : (
             <ListItem>
-              <ListItemText primary="검색어를 입력하거나 다른 검색어로 시도해보세요." />
+              <ListItemText primary={t.noResults} />
             </ListItem>
           )}
         </List>
